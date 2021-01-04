@@ -1,6 +1,10 @@
 # Dynamote Arduino
 
-This repository contains the code for Dynamote remotes, which are based on the Arduino platform.
+<p align="center">
+    <img src="https://dynamote.ca/icons/logo2.png" alt="" width="200" height="200">
+</p>
+
+This repository contains the code for Dynamote remotes, which are based on the Arduino platform. Get the app on [Google Play](https://play.google.com/store/apps/details?id=com.dmhuisma.dynamote).
 
 - [Dynamote Arduino](#dynamote-arduino)
 - [Supported Hardware](#supported-hardware)
@@ -10,6 +14,7 @@ This repository contains the code for Dynamote remotes, which are based on the A
     - [Arduino nano 33 IOT](#arduino-nano-33-iot)
     - [Adafruit HUZZAH32](#adafruit-huzzah32)
 - [Connectivity](#connectivity)
+- [Custom Commands](#custom-commands)
 
 # Supported Hardware
 
@@ -50,3 +55,7 @@ Dynamote supports either WiFi or BLE for communicating with your remote. You can
 Which one should you use? In general, we recommend WiFi. With WiFi you can get better range (only need to be connected to the same network, not close proximity like BLE), quicker response (do not need to connect/pair first like BLE), and the option to use Google Assistant integration with Dynamote Pro (in-app purchase). BLE can be useful in environments where you may not have access to a WiFi network, or the WiFI is unreliable.
 
 When using WiFi, you can input your network credentials in the "device_settings.h" file. Also make sure you change the "DEVICE_NAME" in this file to something unique (for example, "living_room" or "basement"). This is what is used by the Dynamote app to identify your device on the network, and you cannot have multiple devices with the same device name.
+
+# Custom Commands
+
+Dynamote is primarily built as an IR remote solution. However, since it is Arduino based and the code is provided directly to you, you are able to extend upon it for your own purposes. The Dynamote app provides a way to interface with your own code through "custom commands". When configuring a button in the app you will also see the option to manually type in a custom command. You can then react to that custom command in your code, see the "custom_code_handlers.h" file for how to do this, as well as an example. This allows you to use Dynamote as a remote for your own projects.

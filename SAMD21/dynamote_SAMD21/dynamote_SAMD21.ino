@@ -7,8 +7,6 @@
 #error "both WiFi and BLE cannot be defined at the same time"
 #endif
 
-// TODO - handle repeat codes (for holding) and toggle bits (repeated presses?) This is all shown in the "record" example
-
 /******************************************************************************************************************
 * includes
 ******************************************************************************************************************/
