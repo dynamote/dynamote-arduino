@@ -94,46 +94,32 @@ void setupCloudIoT() {
     iotConfig_t *iotConfigTemp = (iotConfig_t *) buffer;
     // recall project id
     iotConfig.project_id_length = iotConfigTemp->project_id_length;
-    for (int x = 0; x < iotConfig.project_id_length; x++)
-      iotConfig.project_id[x] = iotConfigTemp->project_id[x];
+    strcpy(iotConfig.project_id, iotConfigTemp->project_id);
     // recall location
     iotConfig.location_length = iotConfigTemp->location_length;
-    for (int x = 0; x < iotConfig.location_length; x++)
-      iotConfig.location[x] = iotConfigTemp->location[x];
+    strcpy(iotConfig.location, iotConfigTemp->location);
     // recall registry_id
     iotConfig.registry_id_length = iotConfigTemp->registry_id_length;
-    for (int x = 0; x < iotConfig.registry_id_length; x++)
-      iotConfig.registry_id[x] = iotConfigTemp->registry_id[x];
+    strcpy(iotConfig.registry_id, iotConfigTemp->registry_id);
     // recall device_id
     iotConfig.device_id_length = iotConfigTemp->device_id_length;
-    for (int x = 0; x < iotConfig.device_id_length; x++)
-      iotConfig.device_id[x] = iotConfigTemp->device_id[x];
+    strcpy(iotConfig.device_id, iotConfigTemp->device_id);
     // recall private key str
     iotConfig.private_key_str_length = iotConfigTemp->private_key_str_length;
-    for (int x = 0; x < iotConfig.private_key_str_length; x++)
-      iotConfig.private_key_str[x] = iotConfigTemp->private_key_str[x];
+    strcpy(iotConfig.private_key_str, iotConfigTemp->private_key_str);
   }
   else {
-    // set project id
-    iotConfig.project_id_length = sizeof(default_id[0])*sizeof(default_id);
-    for (int x = 0; x < iotConfig.project_id_length; x++)
-      iotConfig.project_id[x] = default_id[x];
-    // set location
-    iotConfig.location_length = sizeof(default_id[0])*sizeof(default_id);
-    for (int x = 0; x < iotConfig.location_length; x++)
-      iotConfig.location[x] = default_id[x];
-    // set registry id
-    iotConfig.registry_id_length = sizeof(default_id[0])*sizeof(default_id);
-    for (int x = 0; x < iotConfig.registry_id_length; x++)
-      iotConfig.registry_id[x] = default_id[x];
-    // set device id
-    iotConfig.device_id_length = sizeof(default_id[0])*sizeof(default_id);
-    for (int x = 0; x < iotConfig.device_id_length; x++)
-      iotConfig.device_id[x] = default_id[x];
-    // set private key str
-    iotConfig.private_key_str_length = sizeof(default_id[0])*sizeof(default_id);
-    for (int x = 0; x < iotConfig.private_key_str_length; x++)
-      iotConfig.private_key_str[x] = default_id[x];
+    // set defaults
+    iotConfig.project_id_length = sizeof(default_id[0])/sizeof(default_id);
+    strcpy(iotConfig.project_id, default_id);
+    iotConfig.location_length = sizeof(default_id[0])/sizeof(default_id);
+    strcpy(iotConfig.location, default_id);
+    iotConfig.registry_id_length = sizeof(default_id[0])/sizeof(default_id);
+    strcpy(iotConfig.registry_id, default_id);
+    iotConfig.device_id_length = sizeof(default_id[0])/sizeof(default_id);
+    strcpy(iotConfig.device_id, default_id);
+    iotConfig.private_key_str_length = sizeof(default_id[0])/sizeof(default_id);
+    strcpy(iotConfig.private_key_str, default_id);
     // save
     prefs.putBytes("iotConfig", &iotConfig, sizeof(iotConfig_t));
   }
@@ -214,21 +200,16 @@ void configureAssistantIntegration(String configurationString) {
   newDeviceIdString.toCharArray(newDeviceId, newDeviceIdString.length()+1);
   newPrivateKeyStrString.toCharArray(newPrivateKeyStr, newPrivateKeyStrString.length()+1);
 
-  iotConfig.project_id_length = newProjectIdString.length()+1;
-  for(int x = 0; x < iotConfig.project_id_length; x++)
-    iotConfig.project_id[x] = newProjectId[x];
-  iotConfig.location_length = newLocationString.length()+1;
-  for(int x = 0; x < iotConfig.location_length; x++)
-    iotConfig.location[x] = newLocation[x];
-  iotConfig.registry_id_length = newRegistryIdString.length()+1;
-  for(int x = 0; x < iotConfig.registry_id_length; x++)
-    iotConfig.registry_id[x] = newRegistryId[x];
-  iotConfig.device_id_length = newDeviceIdString.length()+1;
-  for(int x = 0; x < iotConfig.device_id_length; x++)
-    iotConfig.device_id[x] = newDeviceId[x];
-  iotConfig.private_key_str_length = newPrivateKeyStrString.length()+1;
-  for(int x = 0; x < iotConfig.private_key_str_length; x++)
-    iotConfig.private_key_str[x] = newPrivateKeyStr[x];
+  iotConfig.project_id_length = sizeof(newProjectId)/sizeof(newProjectId[0]);
+  strcpy(iotConfig.project_id, newProjectId);
+  iotConfig.location_length = sizeof(newLocation)/sizeof(newLocation[0]);
+  strcpy(iotConfig.location, newLocation);
+  iotConfig.registry_id_length = sizeof(newRegistryId)/sizeof(newRegistryId[0]);
+  strcpy(iotConfig.registry_id, newRegistryId);
+  iotConfig.device_id_length = sizeof(newDeviceId)/sizeof(newDeviceId[0]);
+  strcpy(iotConfig.device_id, newDeviceId);
+  iotConfig.private_key_str_length = sizeof(newPrivateKeyStr)/sizeof(newPrivateKeyStr[0]);
+  strcpy(iotConfig.private_key_str, newPrivateKeyStr);
 
   prefs.putBytes("iotConfig", &iotConfig, sizeof(iotConfig_t));
 }

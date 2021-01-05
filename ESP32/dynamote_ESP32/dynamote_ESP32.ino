@@ -1,6 +1,6 @@
 // define to enable BLE or WiFi functionality
-//#define ENABLE_WIFI
-#define ENABLE_BLE
+#define ENABLE_WIFI
+//#define ENABLE_BLE
 
 // Only one can be enabled at a time
 #if defined(ENABLE_WIFI) && defined(ENABLE_BLE)
@@ -106,6 +106,9 @@ class bleServerCallbacks: public BLEServerCallbacks {
     void onDisconnect(BLEServer* bleServer) {
       setRemoteState(SEND);
       Serial.println("Disconnected event");
+
+      // re-advertise
+      BLEDevice::startAdvertising();
     }
 };
 
