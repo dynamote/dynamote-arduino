@@ -4,7 +4,7 @@
     <img src="https://dynamote.ca/icons/logo2.png" alt="" width="200" height="200">
 </p>
 
-This repository contains the code for Dynamote remotes, which are based on the Arduino platform. Get the app on [Google Play](https://play.google.com/store/apps/details?id=com.dmhuisma.dynamote).
+This repository contains the code for Dynamote remotes, which are based on the Arduino platform. Get the app on [Google Play](https://play.google.com/store/apps/details?id=com.electricedge.dynamote).
 
 - [Dynamote Arduino](#dynamote-arduino)
 - [Supported Hardware](#supported-hardware)
@@ -15,6 +15,7 @@ This repository contains the code for Dynamote remotes, which are based on the A
     - [Adafruit HUZZAH32](#adafruit-huzzah32)
 - [Connectivity](#connectivity)
 - [Custom Commands](#custom-commands)
+- [IR Remote Circuit](#ir-remote-circuit)
 
 # Supported Hardware
 
@@ -59,3 +60,12 @@ When using WiFi, you can input your network credentials in the "device_settings.
 # Custom Commands
 
 Dynamote is primarily built as an IR remote solution. However, since it is Arduino based and the code is provided directly to you, you are able to extend upon it for your own purposes. The Dynamote app provides a way to interface with your own code through "custom commands". When configuring a button in the app you will also see the option to manually type in a custom command. You can then react to that custom command in your code, see the "custom_code_handlers.h" file for how to do this, as well as an example. This allows you to use Dynamote as a remote for your own projects.
+
+# IR Remote Circuit
+
+In order to use Dynamote as a universal remote you will have to add infrared circuitry to your chosen hardware. This means adding an infrared emitter (LED) for sending remote commands, and an infrared receiver so you can record new ones. You are free to design your own circuit, there are also many guides online that you can use to find circuits for universal remotes. For simplicity, we recommend using off the shelf modules that you can buy, such as the following ones.
+
+* [Infrared Emitter](https://www.seeedstudio.com/Grove-Infrared-Emitter.html)
+* [Infrared Receiver](https://www.seeedstudio.com/Grove-Infrared-Receiver.html)
+
+You can find wiring diagrams that use these modules in the "wiring_diagram" subfolder. In the case of the Arduino Nano IoT 33 you can also find files for a 3d printable case that uses these modules in the "3d_printable_case" subfolder.

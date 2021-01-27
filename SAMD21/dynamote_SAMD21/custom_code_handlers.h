@@ -7,6 +7,11 @@
 *  Here you can add your own application code for the custom code handlers.
 *  This can be anything you want, not just IR remote specific.
 *  However, below is an example relating to IR remotes.
+*
+*  Some other possible ideas include:
+*  - toggle a relay
+*  - control an RGB light strip. Turn on/off, change brightness, change color, change pattern, etc.  
+*
 */
 
 /******************************************************************************************************************
