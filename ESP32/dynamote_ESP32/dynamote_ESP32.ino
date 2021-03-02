@@ -269,6 +269,8 @@ void wifiLoop(){
 
     if (client) {                             // if you get a client,
       String currentLine = "";                // make a String to hold incoming data from the client
+      String requestCommand = "";
+      String requestData = "";
       while (client.connected()) {            // loop while the client's connected
         if (client.available()) {             // if there's bytes to read from the client,
           char c = client.read();             // read a byte, then
@@ -277,6 +279,7 @@ void wifiLoop(){
             // if the current line is blank, you got two newline characters in a row.
             // that's the end of the client HTTP request, so send a response:
             if (currentLine.length() == 0) {
+
               // header
               // send an OK response to the client
               client.println("HTTP/1.1 200 OK");
@@ -294,9 +297,18 @@ void wifiLoop(){
                 }
               }
 
+              // get the data from the HTTP request, then handle it
+              else {
+                while(client.available()) {
+                  requestData += (char)client.read();
+                }
+                handleWifiClientRequest(requestCommand, requestData);
+              }
+
               // break out of the while loop:
               break;
             } 
+
             else {
 
               //
@@ -304,27 +316,9 @@ void wifiLoop(){
               //
               if (currentLine.indexOf("POST /") != -1) {
                 // remove the "POST /"
-                String command = currentLine.substring(currentLine.indexOf("POST /") + 6);
+                requestCommand = currentLine.substring(currentLine.indexOf("POST /") + 6);
                 // remove anything after a space
-                command = command.substring(0, command.indexOf(' '));
-
-                //
-                // Are we trying to send a remote command?
-                //
-                if (command.startsWith("sendRemoteCommand/")) {
-                  command.replace("sendRemoteCommand/", "");
-                  sendRemoteCommandFromWifi(command);
-                }
-
-                //
-                // Are we trying to configure assistant integration?
-                //
-                if (command.startsWith("configureAssistantIntegration/")) {
-                  command.replace("configureAssistantIntegration/", "");
-                  configureAssistantIntegration(command);
-                  resetAfterResponse = true;
-                  Serial.println("Saved new Assistant integration config, resetting...");
-                }
+                requestCommand = requestCommand.substring(0, requestCommand.indexOf(' '));
               } 
 
               //
@@ -332,27 +326,9 @@ void wifiLoop(){
               //
               if (currentLine.indexOf("GET /") != -1) {
                 // remove the "GET /"
-                String command = currentLine.substring(currentLine.indexOf("GET /") + 5);
+                requestCommand = currentLine.substring(currentLine.indexOf("GET /") + 5);
                 // remove anything after a space
-                command = command.substring(0, command.indexOf(' '));
-                Serial.println(command);
-
-                //
-                // determine if a new recorded command is requested
-                //
-                if (command == "getRecordedCommand") {
-                  if (remoteState != RECORD)
-                    setRemoteState(RECORD);
-
-                  // If we do not receive the next command within several seconds, we will go back to SEND state
-                  remoteRecordRequestTime = millis();
-                }
-                //
-                // determine if the client is done recording commands
-                //
-                else if (command == "getRecordedCommandDone") {
-                  setRemoteState(SEND);
-                }
+                requestCommand = requestCommand.substring(0, requestCommand.indexOf(' '));
               } 
 
               currentLine = "";
@@ -375,6 +351,45 @@ void wifiLoop(){
     remoteRecordRequestTime = 0;
     if (remoteState != SEND)
       setRemoteState(SEND);
+  }
+}
+
+/******************************************************************************************************************
+* handleWifiClientRequest
+******************************************************************************************************************/
+void handleWifiClientRequest(String command, String commandData) {
+
+  //
+  // Are we trying to send a remote command?
+  //
+  if (command.startsWith("sendRemoteCommand")) {
+    sendRemoteCommandFromWifi(commandData);
+  }
+
+  //
+  // Are we trying to configure assistant integration?
+  //
+  if (command.startsWith("configureAssistantIntegration")) {
+    configureAssistantIntegration(commandData);
+    resetAfterResponse = true;
+    Serial.println("Saved new Assistant integration config, resetting...");
+  }
+
+  //
+  // determine if a new recorded command is requested
+  //
+  if (command == "getRecordedCommand") {
+    if (remoteState != RECORD)
+      setRemoteState(RECORD);
+
+    // If we do not receive the next command within several seconds, we will go back to SEND state
+    remoteRecordRequestTime = millis();
+  }
+  //
+  // determine if the client is done recording commands
+  //
+  else if (command == "getRecordedCommandDone") {
+    setRemoteState(SEND);
   }
 }
 
@@ -637,41 +652,10 @@ void getReceiverInput() {
 }
 
 /******************************************************************************************************************
-* getSeperatedStringValue
-******************************************************************************************************************/
-String getSeperatedStringValue(String data, char separator, int index)
-{
-  // splits a string into an array, with a given delimeter, then returns the value of the specified index
-
-  int found = 0;
-  int strIndex[] = {0, -1};
-  int maxIndex = data.length()-1;
-
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-        found++;
-        strIndex[0] = strIndex[1]+1;
-        strIndex[1] = (i == maxIndex) ? i+1 : i;
-    }
-  }
-
-  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
-}
-
-/******************************************************************************************************************
 * deserializeJsonStringToRemoteCommand
 ******************************************************************************************************************/
 DeserializationError deserializeJsonStringToRemoteCommand(String jsonString, RemoteCommand *command)
 {
-  // the WiFiClient seems to provide some characters as ascii.
-  // we know which ones we will be sending with the json string.
-  // its kind of annoying, but we can manually convert them.
-  jsonString.replace("%5B", "[");
-  jsonString.replace("%5D", "]");
-  jsonString.replace("%7B", "{");
-  jsonString.replace("%7D", "}");
-  jsonString.replace("%22", "\"");
-
   char jsonStringCharArray[jsonString.length()+1];
   jsonString.toCharArray(jsonStringCharArray, jsonString.length()+1);
 

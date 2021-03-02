@@ -10,6 +10,7 @@
 #include <WiFiNINA.h>
 #include "dynamote_SAMD21.h"
 #include <FlashStorage.h>                     // FlashStorage https://github.com/cmaglie/FlashStorage
+#include <ArduinoJson.h>
 
 /******************************************************************************************************************
 * globals
@@ -50,6 +51,8 @@ char *private_key_str;
 // Reserve a portion of flash memory to store the iotConfig and
 // call it "iotConfig_flash_store".
 FlashStorage(iotConfig_flash_store, iotConfig_t);
+
+#define CONNECT_MAX_BACKOFF_MS 60000
 
 /******************************************************************************************************************
 * messageReceived
@@ -148,51 +151,91 @@ void mqttloop() {
   mqtt->loop();
   delay(10);
 
-  if (!mqttClient->connected()) {
-    static unsigned long mqttDisconnectTime = 0;
-    if (mqttDisconnectTime == 0)
-      mqttDisconnectTime = millis();
-    if (WiFi.status() == WL_CONNECTED && mqttDisconnectTime + 5000 < millis()) {
-      mqttClient->disconnect();
-      mqtt->mqttConnectAsync();
-      mqttDisconnectTime = 0;
-    }
+  //
+  // determine if a mqtt reconnect is required
+  //
+
+  // Do nothing if already connected.
+  if (mqttClient->connected()) {
+      return;
+  }
+
+  // Init the backoff index.
+  static int backoff_index = 0;
+  // Init the last connect time.
+  static unsigned long last_connect_t_ms = 0;
+  // Init backoff delay.
+  static uint32_t backoff_ms = 0;
+
+  // Return if delay has not expired.
+  if ((millis() - last_connect_t_ms) < backoff_ms) {
+    return;
+  }
+
+  // return if wifi is not connected
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  // Set the connect ping.
+  last_connect_t_ms = millis();
+
+  // Attempt connect
+  mqttClient->disconnect();
+  mqtt->mqttConnectAsync();
+
+  // If connection fails delay before trying again.
+  if (mqttClient->connected()) {
+
+    // Reset the backoff index.
+    backoff_index = 0;
+    // Reset the last ping time.
+    last_connect_t_ms = 0;
+    // Reset backoff delay.
+    backoff_ms = 0;
+
+  } else {
+    // Compute the backoff delay.
+    backoff_ms = min(int(pow(2, backoff_index++)) * 1000 + int(random(1000)), CONNECT_MAX_BACKOFF_MS);
+
+    // Log the delay.
+    Serial.print("Failed to connect. Trying again after ");
+    Serial.print(backoff_ms);
+    Serial.println("ms");
   }
 }
 
 /******************************************************************************************************************
 * configureAssistantIntegration
 ******************************************************************************************************************/
-void configureAssistantIntegration(String configurationString) {
+void configureAssistantIntegration(String configurationJson) {
 
-  // first, seperate each piece of the configuration string
-  String newProjectIdString = getSeperatedStringValue(configurationString, '/', 0);
-  String newLocationString = getSeperatedStringValue(configurationString, '/', 1);
-  String newRegistryIdString = getSeperatedStringValue(configurationString, '/', 2);
-  String newDeviceIdString = getSeperatedStringValue(configurationString, '/', 3);
-  String newPrivateKeyStrString = getSeperatedStringValue(configurationString, '/', 4);
+  char jsonStringCharArray[configurationJson.length()+1];
+  configurationJson.toCharArray(jsonStringCharArray, configurationJson.length()+1);
 
-  char newProjectId[newProjectIdString.length()+1];
-  char newLocation[newLocationString.length()+1];
-  char newRegistryId[newRegistryIdString.length()+1];
-  char newDeviceId[newDeviceIdString.length()+1];
-  char newPrivateKeyStr[newPrivateKeyStrString.length()+1];
+  StaticJsonDocument<500> jsonDoc;                  // <- plenty of size for this
+  DeserializationError deserializeStatus = deserializeJson(jsonDoc, jsonStringCharArray);
 
-  newProjectIdString.toCharArray(newProjectId, newProjectIdString.length()+1);
-  newLocationString.toCharArray(newLocation, newLocationString.length()+1);
-  newRegistryIdString.toCharArray(newRegistryId, newRegistryIdString.length()+1);
-  newDeviceIdString.toCharArray(newDeviceId, newDeviceIdString.length()+1);
-  newPrivateKeyStrString.toCharArray(newPrivateKeyStr, newPrivateKeyStrString.length()+1);
+  if (deserializeStatus) {
+    Serial.println("Error, could not parse new Assistnat configuration settings");
+    return;
+  }
 
-  iotConfig.project_id_length = sizeof(newProjectId)/sizeof(newProjectId[0]);
+  const char* newProjectId = jsonDoc["projectId"];
+  const char* newLocation = jsonDoc["location"];
+  const char* newRegistryId = jsonDoc["registryId"];
+  const char* newDeviceId = jsonDoc["deviceId"];
+  const char* newPrivateKeyStr = jsonDoc["pvtKeyString"];
+
+  iotConfig.project_id_length = strlen(newProjectId);
   strcpy(iotConfig.project_id, newProjectId);
-  iotConfig.location_length = sizeof(newLocation)/sizeof(newLocation[0]);
+  iotConfig.location_length = strlen(newLocation);
   strcpy(iotConfig.location, newLocation);
-  iotConfig.registry_id_length = sizeof(newRegistryId)/sizeof(newRegistryId[0]);
+  iotConfig.registry_id_length = strlen(newRegistryId);
   strcpy(iotConfig.registry_id, newRegistryId);
-  iotConfig.device_id_length = sizeof(newDeviceId)/sizeof(newDeviceId[0]);
+  iotConfig.device_id_length = strlen(newDeviceId);
   strcpy(iotConfig.device_id, newDeviceId);
-  iotConfig.private_key_str_length = sizeof(newPrivateKeyStr)/sizeof(newPrivateKeyStr[0]);
+  iotConfig.private_key_str_length = strlen(newPrivateKeyStr);
   strcpy(iotConfig.private_key_str, newPrivateKeyStr);
 
   iotConfig.valid = true;

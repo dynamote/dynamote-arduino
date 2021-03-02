@@ -24,6 +24,5 @@ typedef struct
 ******************************************************************************************************************/
 void sendRemoteCommand(RemoteCommand command);
 void sendRemoteCommandFromWifi(String command);
-String getSeperatedStringValue(String data, char separator, int index);
 
 #endif
