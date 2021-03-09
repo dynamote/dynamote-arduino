@@ -40,12 +40,16 @@ void DynamoteWiFi::begin()
 ******************************************************************************************************************/
 void DynamoteWiFi::loop(void)
 {
-	RemoteCommand recordedCommand = dynamoteLoop();
+	RemoteCommand command = dynamoteLoop();
+	static RemoteCommand recordedCommand = RemoteCommand();
+	if (command.codeLength != 0) {
+		recordedCommand = command;
+	}
 
 	if (WiFi.status() != WL_CONNECTED)
 		return;
 
-	WiFiClient client = _server.available();;
+	WiFiClient client = _server.available();
 
 	if (client) {                             // if you get a client,
 		String currentLine = "";                // make a String to hold incoming data from the client
@@ -72,6 +76,7 @@ void DynamoteWiFi::loop(void)
 							serializeRemoteCommandToJsonString(recordedCommand, recordedRemoteCommandJsonString);
 							client.print(recordedRemoteCommandJsonString);
 							client.println("");
+							recordedCommand = RemoteCommand();
 						}
 						
 						// get the data from the HTTP request, then handle it

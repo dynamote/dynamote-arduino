@@ -26,7 +26,12 @@
 //#define DYNAMOTE_BLE
 
 // Select the pin input you would like to use for the IR receiver
+// Not all pins will work, results may vary.
+#if defined(ESP32)
 #define RECEIVER_PIN				14
+#elif defined(ARDUINO_SAMD_NANO_33_IOT)
+#define RECEIVER_PIN				2
+#endif
 
 // The SEND pin is hardcoded in the IRLib2 library for each board. Listed below are the pins for our supported boards.
 //   Adafruit HUZZAH32 = digital pin 26 (same as analog pin A0)
