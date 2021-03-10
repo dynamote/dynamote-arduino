@@ -289,9 +289,10 @@ void configureMqtt(String configurationJson) {
     return;
   }
 
+	//
+  // apply the new settings
   //
-  // save the new settings
-  //
+
   const char* newProjectId = jsonDoc["projectId"];
   const char* newLocation = jsonDoc["location"];
   const char* newRegistryId = jsonDoc["registryId"];
@@ -303,15 +304,6 @@ void configureMqtt(String configurationJson) {
   strcpy(mqttConfig.device_id, newDeviceId);
   strcpy(mqttConfig.private_key_str, newPrivateKeyStr);
 
-#if defined(__DYNAMOTE_ESP32__)
-  prefs.putBytes("mqttConfig", &mqttConfig, sizeof(mqttConfig_t));
-#elif defined(__DYNAMOTE_SAMD21__)
-  mqttConfig_flash_store.write(mqttConfig);
-#endif
-
-  //
-  // apply the new settings
-  //
 
   if (mqttClient->connected()) {
     mqttClient->disconnect();
@@ -358,6 +350,16 @@ void configureMqtt(String configurationJson) {
     mqtt->setUseLts(true);
     mqtt->startMQTT();
   }
+
+	//
+  // save the new settings
+  //
+
+	#if defined(__DYNAMOTE_ESP32__)
+  prefs.putBytes("mqttConfig", &mqttConfig, sizeof(mqttConfig_t));
+#elif defined(__DYNAMOTE_SAMD21__)
+  mqttConfig_flash_store.write(mqttConfig);
+#endif
 }
 
 #endif
